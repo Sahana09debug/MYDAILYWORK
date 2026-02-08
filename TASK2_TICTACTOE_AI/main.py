@@ -4,14 +4,14 @@ import numpy as np
 
 pygame.init()
 
-# COLORS
+#  COLORS 
 WHITE = (255, 255, 255)
 GRAY = (180, 180, 180)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLACK = (0, 0, 0)
 
-# DIMENSIONS
+#  DIMENSIONS 
 WIDTH = 300
 HEIGHT = 300
 LINE_WIDTH = 5
@@ -22,39 +22,49 @@ CIRCLE_RADIUS = SQUARE_SIZE // 3
 CIRCLE_WIDTH = 15
 CROSS_WIDTH = 20
 
+#  SCREEN 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Tic Tac Toe AI")
 screen.fill(BLACK)
 
+#  BOARD 
 board = np.zeros((BOARD_ROWS, BOARD_COLS))
 
 
+#  FUNCTIONS 
 def draw_lines():
     for i in range(1, BOARD_ROWS):
-        pygame.draw.line(screen, WHITE, (0, i*SQUARE_SIZE), (WIDTH, i*SQUARE_SIZE), LINE_WIDTH)
-        pygame.draw.line(screen, WHITE, (i*SQUARE_SIZE, 0), (i*SQUARE_SIZE, HEIGHT), LINE_WIDTH)
+        pygame.draw.line(screen, WHITE, (0, i * SQUARE_SIZE),
+                         (WIDTH, i * SQUARE_SIZE), LINE_WIDTH)
+        pygame.draw.line(screen, WHITE, (i * SQUARE_SIZE, 0),
+                         (i * SQUARE_SIZE, HEIGHT), LINE_WIDTH)
 
 
-def draw_figures(color=WHITE):
+def draw_figures():
     for row in range(BOARD_ROWS):
         for col in range(BOARD_COLS):
             if board[row][col] == 1:
                 pygame.draw.circle(
-                    screen, color,
-                    (col*SQUARE_SIZE + SQUARE_SIZE//2, row*SQUARE_SIZE + SQUARE_SIZE//2),
+                    screen, WHITE,
+                    (col * SQUARE_SIZE + SQUARE_SIZE // 2,
+                     row * SQUARE_SIZE + SQUARE_SIZE // 2),
                     CIRCLE_RADIUS, CIRCLE_WIDTH
                 )
             elif board[row][col] == 2:
                 pygame.draw.line(
-                    screen, color,
-                    (col*SQUARE_SIZE + SQUARE_SIZE//4, row*SQUARE_SIZE + SQUARE_SIZE//4),
-                    (col*SQUARE_SIZE + 3*SQUARE_SIZE//4, row*SQUARE_SIZE + 3*SQUARE_SIZE//4),
+                    screen, WHITE,
+                    (col * SQUARE_SIZE + SQUARE_SIZE // 4,
+                     row * SQUARE_SIZE + SQUARE_SIZE // 4),
+                    (col * SQUARE_SIZE + 3 * SQUARE_SIZE // 4,
+                     row * SQUARE_SIZE + 3 * SQUARE_SIZE // 4),
                     CROSS_WIDTH
                 )
                 pygame.draw.line(
-                    screen, color,
-                    (col*SQUARE_SIZE + SQUARE_SIZE//4, row*SQUARE_SIZE + 3*SQUARE_SIZE//4),
-                    (col*SQUARE_SIZE + 3*SQUARE_SIZE//4, row*SQUARE_SIZE + SQUARE_SIZE//4),
+                    screen, WHITE,
+                    (col * SQUARE_SIZE + SQUARE_SIZE // 4,
+                     row * SQUARE_SIZE + 3 * SQUARE_SIZE // 4),
+                    (col * SQUARE_SIZE + 3 * SQUARE_SIZE // 4,
+                     row * SQUARE_SIZE + SQUARE_SIZE // 4),
                     CROSS_WIDTH
                 )
 
@@ -68,11 +78,7 @@ def available_square(row, col):
 
 
 def is_board_full(b):
-    for row in range(BOARD_ROWS):
-        for col in range(BOARD_COLS):
-            if b[row][col] == 0:
-                return False
-    return True
+    return not np.any(b == 0)
 
 
 def check_win(player, b=board):
@@ -86,7 +92,7 @@ def check_win(player, b=board):
     return False
 
 
-def minimax(b, depth, is_max):
+def minimax(b, is_max):
     if check_win(2, b):
         return 1
     if check_win(1, b):
@@ -100,9 +106,8 @@ def minimax(b, depth, is_max):
             for c in range(3):
                 if b[r][c] == 0:
                     b[r][c] = 2
-                    score = minimax(b, depth+1, False)
+                    best = max(best, minimax(b, False))
                     b[r][c] = 0
-                    best = max(best, score)
         return best
     else:
         best = 1000
@@ -110,36 +115,45 @@ def minimax(b, depth, is_max):
             for c in range(3):
                 if b[r][c] == 0:
                     b[r][c] = 1
-                    score = minimax(b, depth+1, True)
+                    best = min(best, minimax(b, True))
                     b[r][c] = 0
-                    best = min(best, score)
         return best
 
 
 def best_move():
     best_score = -1000
     move = (-1, -1)
+
     for r in range(3):
         for c in range(3):
             if board[r][c] == 0:
                 board[r][c] = 2
-                score = minimax(board, 0, False)
+                score = minimax(board, False)
                 board[r][c] = 0
+
                 if score > best_score:
                     best_score = score
                     move = (r, c)
+
     mark_square(move[0], move[1], 2)
 
 
-draw_lines()
-player = 1
-game_over = False
+def show_text(text, color):
+    font = pygame.font.SysFont(None, 40)
+    label = font.render(text, True, color)
+    rect = label.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+    screen.blit(label, rect)
 
-while True:
+
+# ================= MAIN =================
+draw_lines()
+game_over = False
+running = True
+
+while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
+            running = False
 
         if event.type == pygame.MOUSEBUTTONDOWN and not game_over:
             x, y = event.pos
@@ -148,12 +162,15 @@ while True:
 
             if available_square(row, col):
                 mark_square(row, col, 1)
+
                 if check_win(1):
                     game_over = True
-                else:
+                elif not is_board_full(board):
                     best_move()
                     if check_win(2):
                         game_over = True
+                else:
+                    game_over = True
 
         if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
             board[:] = 0
@@ -162,4 +179,16 @@ while True:
             game_over = False
 
     draw_figures()
+
+    if game_over:
+        if check_win(1):
+            show_text("You Win!", GREEN)
+        elif check_win(2):
+            show_text("AI Wins!", RED)
+        else:
+            show_text("It's a Draw!", GRAY)
+
     pygame.display.update()
+
+pygame.quit()
+sys.exit()
