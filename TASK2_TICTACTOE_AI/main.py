@@ -2,7 +2,7 @@ import sys
 import pygame
 import numpy as np
 
-pygame.init()
+pygame.font.init()
 
 #  COLORS 
 WHITE = (255, 255, 255)
@@ -139,7 +139,7 @@ def best_move():
 
 
 def show_text(text, color):
-    font = pygame.font.SysFont(None, 40)
+    font = pygame.font.Font(None, 40)
     label = font.render(text, True, color)
     rect = label.get_rect(center=(WIDTH // 2, HEIGHT // 2))
     screen.blit(label, rect)
