@@ -30,7 +30,7 @@ The game is developed using Python and Pygame and provides an interactive graphi
 - Graphical user interface using Pygame  
 - Human vs AI gameplay  
 - Mouse-based interaction  
-
+- Results will be displayed
 ## Technologies Used
 - Python  
 - Pygame  
